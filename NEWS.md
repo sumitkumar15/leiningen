@@ -1,5 +1,9 @@
 # Leiningen News -- history of user-visible changes
 
+## ??? / ???
+
+* Add project coordinate data to jar metadata. (Conor McDermottroe)
+
 ## 2.8.1 / 2017-10-27
 
 * Fix a bug where `lein help` couldn't list built-in tasks on Java 9. (Phil Hagelberg)
@@ -23,6 +27,7 @@
 * JVMs on 8u131 and newer will default to using cgroups settings for memory limits. (Phil Hagelberg)
 * Add `:query` subcommand to `deps` to quickly find latest versions. (Phil Hagelberg)
 * Fix a bug where dependency resolution wasn't cached correctly. (Phil Hagelberg)
+* Support for HTTP nREPL has been moved out; requires drawbridge plugin now. (Phil Hagelberg)
 * Warn when `$CLASSPATH` is set. (Phil Hagelberg)
 * Default to requiring TLS for remote repositories. (Phil Hagelberg)
 * Remove warning when running as root. (Phil Hagelberg)

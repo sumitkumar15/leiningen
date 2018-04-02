@@ -154,7 +154,7 @@ First write your credentials map to `~/.lein/credentials.clj` like so:
 
 ```clj
 {#"blueant" {:password "locative1"}
- #"https://clojars.org/repo"
+ #"https://repo.clojars.org"
  {:username "milgrim" :password "locative1"}
  "s3p://s3-repo-bucket/releases"
  {:username "AKIAIN..." :passphrase "1TChrGK4s..."}}
@@ -323,6 +323,13 @@ default, the default is just an assumed convention among most Clojure
 libraries using Leiningen. Applications will have different requirements
 that are varied enough that Leiningen doesn't attempt to support them
 out of the box.
+
+If you just want to change the `deploy` step so it goes to Clojars, you don't
+have to replace the whole `:release-tasks` vector, just set this:
+
+```clojure
+:deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
+```
 
 ### Committing
 

@@ -154,7 +154,7 @@ if "x%HTTP_CLIENT%" == "x" goto TRY_POWERSHELL
 call powershell -? >nul 2>&1
 if NOT ERRORLEVEL 0 goto TRY_WGET
     set LAST_HTTP_CLIENT=powershell
-    powershell -Command "& {param($a,$f) $client = New-Object System.Net.WebClient;  $client.Proxy.Credentials =[System.Net.CredentialCache]::DefaultNetworkCredentials; $client.DownloadFile($a, $f)}" ""%2"" ""%1""
+    powershell -Command "& {param($a,$f) $client = New-Object System.Net.WebClient; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $client.Proxy.Credentials =[System.Net.CredentialCache]::DefaultNetworkCredentials; $client.DownloadFile($a, $f)}" ""%2"" ""%1""
     SET RC=%ERRORLEVEL%
     goto EXITRC
 
@@ -223,8 +223,6 @@ echo Failed to download %LEIN_JAR_URL%
 echo.
 echo It is possible that the download failed due to "powershell", 
 echo "curl" or "wget"'s inability to retrieve GitHub's security certificate.
-echo The suggestions below do not check certificates, so use this only if
-echo you understand the security implications of not doing so.
 echo.
 
 if "%LAST_HTTP_CLIENT%" == "powershell" (
@@ -233,8 +231,8 @@ if "%LAST_HTTP_CLIENT%" == "powershell" (
   echo the HTTP_CLIENT environment variable with one of the following 
   echo values:
   echo.
-  echo   a^) set HTTP_CLIENT=wget --no-check-certificate -O
-  echo   b^) set HTTP_CLIENT=curl -f -L -k -o
+  echo   a^) set HTTP_CLIENT=wget -O
+  echo   b^) set HTTP_CLIENT=curl -f -L -o
   echo.
   echo NOTE: Make sure to *not* add double quotes when setting the value
   echo       of HTTP_CLIENT
@@ -246,7 +244,7 @@ if "%LAST_HTTP_CLIENT%" == "curl" (
   echo the HTTP_CLIENT environment variable with one of the following 
   echo values:
   echo.
-  echo   a^) set HTTP_CLIENT=wget --no-check-certificate -O
+  echo   a^) set HTTP_CLIENT=wget -O
   echo.
   echo NOTE: Make sure to *not* add double quotes when setting the value
   echo       of HTTP_CLIENT
@@ -261,7 +259,7 @@ if "%LAST_HTTP_CLIENT%" == "wget" (
   echo the HTTP_CLIENT environment variable with one of the following 
   echo values:
   echo.
-  echo.   a^) set HTTP_CLIENT=curl -f -L -k -o
+  echo.   a^) set HTTP_CLIENT=curl -f -L -o
   echo.
   echo NOTE: make sure *not* to add double quotes to set the value of 
   echo       HTTP_CLIENT

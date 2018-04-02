@@ -126,7 +126,7 @@
   compilation (which only benefits long-running processes).  This can
   negatively affect performance in the long run, or lead to inaccurate
   benchmarking results.  If want the JVM to fully optimize, you can
-  you can switch profiles with `lein with-profiles production run ...`.
+  switch profiles with `lein with-profiles production run ...`.
 
 **Q:** I'm attempting to run a project as a background process (`lein run &`),
   but the process suspends until it is in the foreground. How do I run a program
@@ -147,7 +147,7 @@
 
 **Q:** How do I determine my project's version at runtime?  
 **A:** Leiningen writes a file called `pom.properties` into
-  `target/classes` which contains a the version number and current git
+  `target/classes` which contains the version number and current git
   revision of the project. In previous versions of Leiningen this was
   only available when running from jar files, but as of 2.4.1 it's
   available during `lein run ...`, etc. You can read it by running
@@ -193,7 +193,7 @@
   arg1 arg2 [...]` without any AOT, but it will take longer to launch.
 
 **Q:** Why does `lein jar` package some namespaces from dependencies into my jar?  
-**A:** This is likely because you have AOT-compiled its namespaces. An
+**A:** This is likely because you have AOT-compiled namespaces. An
   AOT-compiled namespace can only depend on AOT-compiled namespaces. Therefore,
   if you depend on a namespace in a dependency that is not AOT-compiled, it will
   be AOT-compiled and bundled with the jar. It is strongly recommended not to
@@ -214,6 +214,13 @@ You can also check things like `(System/getProperty
 "java.specification.version")` to use the JVM version or any other
 property.
 
+**Q:** What does `Received fatal alert: protocol_version` mean when
+  trying to access Clojars?  
+**A:** This usually means your JVM is not configured to use TLSv1.2, which is
+  used by Clojars' CDN. It's strongly recommended to upgrade to at least Java 8,
+  but if this is not feasible, you can fix it by exporting
+  `LEIN_JVM_OPTS=-Dhttps.protocols=TLSv1.2` as an environment variable.
+
 **Q:** I get a `java.security.KeyException` or `sun.security.provider.certpath.SunCertPathBuilderException` when running `lein`  
 **A:** The `java.security.KeyException` indicates an ssl error when trying to communicate with the HTTPS server via Java. This could be because you need to update the JDK, or some other package (e.g. with old versions of the nss package).
 
@@ -225,10 +232,11 @@ property.
 **Q:** I got `Tried to use insecure HTTP repository without TLS`, what is that about?  
 **A:** This means your project was configured to download dependencies
 from a repository that does not use TLS encryption. This is very
-insecure and exposes you to trivially-executed man-in-the-middle attacks.
-In the rare event that you don't care about the security of the machines
-running your project, you can re-enable support for unprotected repositories
-by putting this in your `project.clj` file:
+insecure and exposes you to trivially-executed man-in-the-middle
+attacks.  In the rare event that you don't care about the security of
+the machines running your project or can ensure that the only http
+traffic is going out over a trusted network, you can re-enable support
+for unsafe repositories by putting this in your `project.clj` file:
 
     ;; never do this
     (require 'cemerick.pomegranate.aether)
@@ -244,10 +252,10 @@ bug with the dependency which does this.
 **A:** You probably downloaded `lein`/`lein.bat` from the [master branch](https://github.com/technomancy/leiningen/tree/master/bin). Unless you plan to build leiningen yourself or help develop it, we suggest you use the latest stable version: [lein](https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein)/[lein.bat](https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein.bat)
 
 **Q:** I have a dependency whose group ID and/or artifact ID starts with a
-  number (which is invalid for symbols in Clojure). How can I add it to my
-  project's dependencies?  
+number (which is invalid for symbols in Clojure). How can I add it to my
+project's dependencies?  
 **A:** As of version 2.8.0, Leiningen supports string dependency names like
-  this:
+this:
 
 ```clj
 :dependencies [["net.3scale/3scale-api" "3.0.2"]]
@@ -258,3 +266,15 @@ Prior to version 2.8.0, this is the workaround:
 ```clj
 :dependencies [[~(symbol "net.3scale" "3scale-api") "3.0.2"]]
 ```
+
+**Q:** I'm getting warnings for implicit hooks or implicit middleware.  
+**A:** Hooks are a deprecated feature where plugins can modify the
+behavior of built-in Leiningen functionality; they result in
+situations which can be very difficult to debug and usually point
+to situations in which the original API is not flexible enough.
+
+Leiningen also has a deprecated feature for implicitly loading
+middleware. Middleware is not deprecated but should now be declared using
+`:middleware` instead of being auto-detected from plugins.
+
+Adding `:implicits false` to `project.clj` will disable all implicit features.

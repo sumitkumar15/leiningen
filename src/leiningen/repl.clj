@@ -176,7 +176,7 @@
           port# (:port server#)
           repl-port-file# (apply io/file ~(repl-port-file-vector project))
           ;; TODO 3.0: remove legacy repl port support.
-          legacy-repl-port# (if (.exists (io/file ~(:target-path project)))
+          legacy-repl-port# (if (.exists (io/file ~(:target-path project "")))
                               (io/file ~(:target-path project) "repl-port"))]
       (when ~start-msg?
         (println "nREPL server started on port" port# "on host" ~(:host cfg)
@@ -198,9 +198,9 @@
 
 (def reply-profile
   {:dependencies
-   '[^:displace [reply "0.3.7"
+   '[^:displace [reply "0.3.8"
                  :exclusions [org.clojure/clojure ring/ring-core]]
-     [clojure-complete "0.2.4"]]})
+     [clojure-complete "0.2.5"]]})
 
 (defn- trampoline-repl [project port]
   (let [init-option (get-in project [:repl-options :init])
@@ -289,7 +289,6 @@ Subcommands:
 
 :connect [dest]
   Connects to an already running nREPL server. Dest can be:
-  - an HTTP(S) URL -- connects to an HTTP(S) nREPL endpoint;
   - host:port -- connects to the specified host and port;
   - port -- resolves host from the LEIN_REPL_HOST environment
       variable or :repl-options, in that order, and defaults to
@@ -300,6 +299,9 @@ Subcommands:
   with @ and points to a filename containing a connect string will read
   that file and use its contents, allowing sensitive credentials to be
   kept out of the process table and shell history.
+
+For connecting to HTTPS repl servers add [com.cemerick/drawbridge \"0.0.7\"]
+to your :plugins list.
 
 Note: the :repl profile is implicitly activated for this task. It cannot be
 deactivated, but it can be overridden."

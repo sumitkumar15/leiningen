@@ -37,7 +37,7 @@
     [id settings]
     (do
       (when @utils/rebound-io?
-        (main/abort "No credentials found for" id "(did you mean `lein deploy"
+        (main/abort "No credentials found for " id "(did you mean `lein deploy"
                     "clojars`?)\nPassword prompts are not supported when ran"
                     "after other (potentially)\ninteractive tasks.\nSee `lein"
                     "help deploy` for an explanation of how to specify"
@@ -74,16 +74,37 @@
         (add-auth-interactively))))
 
 (defn signing-args
-  "Produce GPG arguments for signing a file."
+  "Produce GPG arguments for signing a file, taking the version of gpg
+  into account as necessary."
   [file opts]
-  (let [key-spec (if-let [key (:gpg-key opts)]
-                   ["--default-key" key])]
-    `["--yes" "-ab" ~@key-spec "--" ~file]))
+  (let [key-args (concat
+                  (if-let [key (:gpg-key opts)]
+                    ["--default-key" key])
+                  (if (:gpg-passphrase opts)
+                    (let [{:keys [major minor patch]} (user/gpg-version)
+                          version (+ major (/ minor 10.))]
+                      (if (> version 2.0)
+                        ; gpg 2.1 and newer
+                        ["--passphrase-fd" "0"
+                         "--pinentry-mode" "loopback"]
+                        ; gpg 2.0 and older
+                        ["--passphrase-fd" "0" "--batch"]))))]
+    `["--yes" "-ab" ~@key-args "--" ~file]))
+
+(defn signing-passphrase
+  "Produce GPG passphrase if specified in project"
+  [opts]
+  (if-let [pp (:gpg-passphrase opts)]
+    (or (user/resolve-env-keyword :gpg-passphrase pp) 
+        pp)))
 
 (defn sign
   "Create a detached signature and return the signature file name."
   [file opts]
-  (let [{:keys [err exit]} (apply user/gpg (signing-args file opts))]
+  (let [pass (signing-passphrase opts)
+        args (signing-args file opts)
+        _    (main/info "Signing: gpg " args)
+        {:keys [err exit]} (apply user/gpg-with-passphrase (cons pass args))]
     (when-not (zero? exit)
       (main/abort "Could not sign"
                   (str file "\n" err (if err "\n")
@@ -189,6 +210,9 @@ deploy.
 You can also deploy arbitrary artifacts from disk:
 
     $ lein deploy myrepo com.blueant/fancypants 1.0.1 fancypants.jar pom.xml
+
+The repository can be defined in defproject or a profile, or it can be a URL.
+Use file://$HOME/.m2/repository to install in the local repo.
 
 While this works with any arbitrary files on disk, downstream projects will not
 be able to depend on jars that are deployed without a pom."
